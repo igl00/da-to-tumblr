@@ -1,0 +1,2 @@
+feedparser==5.2.1
+python-tumblpy==1.0.5
