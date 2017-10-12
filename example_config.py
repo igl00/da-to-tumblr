@@ -2,8 +2,8 @@
 """
 import logging
 
-DA_RSS_FEED_URL = ''  # An rss feed from deviantart containing images
-TUMBLR_BLOG_URL = ''  # The tubmlr blog to post the images to
+DA_RSS_FEED_URL = ''  # An rss feed from Deviant Art containing images
+TUMBLR_BLOG_URL = ''  # The Tumblr blog to post the images to
 
 FEED_STATE = 'rss_tracker.txt'  # A file that keeps track of posted items
 

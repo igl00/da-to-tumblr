@@ -1,5 +1,5 @@
-""" Post any items in a given deviantart rss feed to a tumblr blog.
-    Limited to the most recent 60 items in most cases by the deviantart rss feeds.
+""" Post any items in a given Deviant Art rss feed to a Tumblr blog.
+    Limited to the most recent 60 items in most cases by the Deviant Art rss feeds.
 """
 import feedparser
 import random
@@ -10,17 +10,16 @@ from time import sleep
 
 
 client = Tumblpy(CONSUMER_KEY, CONSUMER_SECRET, TOKEN_KEY, TOKEN_SECRET)
-state_dir = os.path.join(os.path.curdir, 'state')
-feed_state = os.path.join(state_dir, FEED_STATE)
+STATE_DIR = os.path.join(os.path.curdir, 'state')
+FEED_STATE = os.path.join(STATE_DIR, FEED_STATE)
 
 logger = logging.getLogger('da-to-tumblr')
 logger.setLevel(min(FILE_LOG_LEVEL, CONSOLE_LOG_LEVEL))
 log_formatter = logging.Formatter('%(asctime)s [%(levelname)s]: %(message)s', '%Y-%m-%d %H:%M:%S')
 
 # Create the folder for the state file if it doesn't exist
-
-if not os.path.exists(state_dir):
-    os.mkdir(state_dir)
+if not os.path.exists(STATE_DIR):
+    os.mkdir(STATE_DIR)
 
 if LOG_TO_CONSOLE:
     console_log = logging.StreamHandler()
@@ -42,26 +41,6 @@ if LOG_TO_FILE:
 
 class PostError(Exception):
     pass
-
-
-def get_published():
-    """ Returns a list of the published item ids from a file.
-    """
-    published = []
-    with open(feed_state, 'a+') as file:
-        file.seek(0)
-        for line in file:
-            published.append(int(line))
-
-    return published
-
-
-def set_published(items):
-    """ Creates a file with a list of published items.
-    """
-    output = [str(item) for item in items]
-    with open(feed_state, 'w') as file:
-        file.write('\n'.join(output))
 
 
 def publish_item(item):
@@ -101,21 +80,21 @@ def publish_item(item):
 
 def main():
     feed = feedparser.parse(DA_RSS_FEED_URL)
-    published_items = get_published()
+    with open(FEED_STATE, 'r') as file:
+        published_items = [int(line.strip()) for line in file.readlines()]
 
     for item in reversed(feed.entries):
         item_id = int(item['id'].split('-')[-1])
         if item_id not in published_items:
             try:
                 publish_item(item)
-                published_items.append(str(item_id))
+                with open(FEED_STATE, 'a') as file:
+                    file.write(str(item_id) + '\n')
             except PostError:
-                pass
+                logger.error('Error publishing: {}'.format(item_id))
             finally:
                 if THROTTLE_API_POSTS:
                     sleep(MEAN_WAIT_TIME + random.uniform(-(WAIT_TIME_SPREAD / 2), WAIT_TIME_SPREAD / 2))
-
-    set_published(published_items)
 
 
 if __name__ == '__main__':
